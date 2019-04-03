@@ -390,7 +390,7 @@ p {
 .top_cont_outer:before{/* content:''; */position:absolute;top:0;width:100%;z-index:5;/* background: rgba(25, 25, 25, 0.7); */height:100%;bottom:0;}
 .hero_section {
     position: relative;
-    padding-top: 72px;
+    padding-top: 30px;
     z-index: 5;
 }
 
@@ -407,7 +407,7 @@ p {
 }
 
 .top_left_cont {
-    padding: 100px 50px 100px 0;
+    padding: 70px 50px 100px 0;
 }
 
 .top_left_cont h3 {
@@ -472,7 +472,7 @@ a.read_more:hover {
 	
 
 .timeline{
-	padding:110px 0;
+	padding:70px 0;
 }
 .timeline h2{ 
 }
@@ -1040,7 +1040,7 @@ transition: all .3s;
 border: 1px solid #CE1139;
 }
 #aboutUs {
-    padding: 110px 0;
+    padding: 60px 0;
 }
 
 /* Contact
@@ -2396,3 +2396,25 @@ img.img.img-circle.lt-box {/* float: left; */width: 64px;height: auto;}
   -o-animation:      arrow-jump 1.5s infinite; /* Opera 12+ */
   animation:         arrow-jump 1.5s infinite; /* IE 10+, Fx 29+ */
 }
+
+
+@-webkit-keyframes swinging{
+    0%{-webkit-transform: rotate(10deg);}
+    50%{-webkit-transform: rotate(-5deg)}
+    100%{-webkit-transform: rotate(10deg);}
+}
+ 
+@keyframes swinging{
+    0%{transform: rotate(10deg);}
+    50%{transform: rotate(-5deg)}
+    100%{transform: rotate(10deg);}
+}
+ 
+.swingimage{
+    -webkit-transform-origin: 50% 0;
+    transform-origin: 50% 0;
+    -webkit-animation: swinging 3.5s ease-in-out forwards infinite;
+    animation: swinging 3.5s ease-in-out forwards infinite;
+}   
+
+
