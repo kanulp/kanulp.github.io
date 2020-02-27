@@ -1,0 +1,403 @@
+#include <iostream>
+#include <vector>
+#include<climits>
+#include<cstdlib>
+#include<math.h>
+#include<algorithm>
+
+using namespace std;
+typedef struct point{
+    int x , y;
+    int deleted = 0;
+    bool operator==(const point& t) const
+    {
+        return (this->x == t.x && this->y == t.y);
+    }
+} point;
+
+typedef  struct line{
+    point p , q;
+    double slope;
+}line;
+line findBridge(vector<point> arr , int );
+vector<point> upperHull(vector<point>  arr, int );
+vector<point> removeMaxMinXcoords(vector<point> &arr);
+
+int randomPartition(line arr[], int l, int r);
+int partition(line arr[], int l, int r);
+void swap(line *a, line *b);
+int randomPartition(line arr[], int l, int r);
+double kthSmallest(line arr[], int l, int r, int k);
+
+int randomPartition(point arr[], int l, int r);
+int partition(point arr[], int l, int r);
+void swap(point *a, line *b);
+int randomPartition(point arr[], int l, int r);
+int kthSmallest(point arr[], int l, int r, int k);
+
+void printLine(line b){
+    cout<<"Line : ("<<b.p.x<<","<<b.p.y<<") -> ("<<b.q.x<<","<<b.q.y<<") m ="<<b.slope<<endl;
+}
+void printPoint(point p){
+    cout<<"Point : ("<<p.x<<","<<p.y<<")"<<endl;
+}
+void printPoints(point * arr , int n){
+    cout<<"#Points " <<n<<endl;
+    for(int i = 0; i<n;i++){
+        printPoint(arr[i]);
+    }
+}
+
+void printPointVec(vector<point> points){
+    for(auto i = points.begin(); i!= points.end();i++){
+        printPoint(*i);
+    }
+}
+void printLineVec(vector<line> lines){
+    for(auto i = lines.begin(); i!= lines.end();i++){
+        printLine(*i);
+    }
+}
+
+line findBridge(vector<point> arr, int n ,int a){
+    if(arr.size() <= 0){
+        line rLine;
+        return rLine;
+    }
+    if(arr.size() == 1){
+        line rLine;
+        rLine.p = arr[0];
+        rLine.q = arr[0];
+        return rLine;
+    }
+    if(arr.size() == 2){
+        line rLine;
+        if(arr[0].x <= arr[1].x) {
+            rLine.p = arr[0];
+            rLine.q = arr[1];
+        }
+        else{
+            rLine.p = arr[0];
+            rLine.q = arr[1];
+        }
+        return rLine;
+    }
+    int numPairs = n/2;
+    vector<line> pairs;
+    int j = 0;
+    for(int i = 0; i<numPairs;i++){
+        if(arr[j].x > arr[j+1].x){
+            line l;
+            l.p = arr[j+1];
+            l.q = arr[j];
+            l.slope = (double)(l.p.y - l.q.y)/ (double)(l.p.x - l.q.x);
+            pairs.push_back(l);
+        }
+        else if(arr[j].x < arr[j+1].x){
+            line l;
+            l.p = arr[j];
+            l.q = arr[j+1];
+            l.slope = (double)(l.p.y - l.q.y)/ (double)(l.p.x - l.q.x);
+            pairs.push_back(l);
+        }
+        else{
+            if(arr[j].y > arr[j+1].y){
+                arr[j+1].deleted = 1;
+            }
+            else{
+                arr[j].deleted = 1;
+            }
+        }
+        j+=2;
+    }
+    double median;
+    line * pairArray = new line[pairs.size()];
+    for(int i = 0 ; i < pairs.size();i++){
+        pairArray[i] = pairs[i];
+    }
+    if(pairs.size()%2 == 0){
+        double val1 = kthSmallest(pairArray , 0 , pairs.size() - 1 , pairs.size()/2);
+        double val2 = kthSmallest(pairArray , 0 , pairs.size() - 1 , ((pairs.size()/2) + 1));
+        median = (val1 + val2) /2;
+    }
+    else{
+        median = kthSmallest(pairArray , 0 , pairs.size() - 1 , ((pairs.size()/2) + 1));
+    }
+
+    vector<point> MAX;
+    double maxIntercept = (double)INT_MIN;
+    for(int i = 0 ; i< n;i++){
+        if((arr[i].y - (median * arr[i].x)) > maxIntercept){
+            maxIntercept = (arr[i].y - (median * arr[i].x));
+        }
+    }
+
+    point r , s;
+    r.x = INT_MAX;
+    s.x = INT_MIN;
+    for(int i = 0; i<n;i++){
+        if((arr[i].y - (median * arr[i].x)) == maxIntercept){
+            MAX.push_back(arr[i]);
+            if(arr[i].x < r.x){
+                r = arr[i];
+            }
+            if(arr[i].x > s.x){
+                s = arr[i];
+            }
+        }
+    }
+    if(r.x <= a && s.x >= a){
+        line rLine;
+        rLine.p = r;
+        rLine.q = s;
+        return rLine;
+    }
+    else{
+        if(s.x < a){
+            for(auto i = pairs.begin(); i != pairs.end(); i++){
+                if((*i).slope >= median){
+                    for(auto j = arr.begin() ; j != arr.end() ;j++){
+                        if((*j) == (*i).p){
+                            (*j).deleted = 1;
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            for(auto i = pairs.begin(); i != pairs.end(); i++){
+                if((*i).slope <= median){
+                    for(auto j = arr.begin() ; j != arr.end() ;j++){
+                        if((*j) == (*i).q){
+                            (*j).deleted = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    vector<point> newArr;
+    for(auto i = arr.begin(); i != arr.end();i++){
+        if(!(*i).deleted){
+            newArr.push_back((*i));
+        }
+    }
+    return findBridge(newArr , newArr.size() , a);
+
+}
+
+
+vector<point> removeMaxMinXcoords(vector<point> &arr) {
+    if(arr.size() == 0){
+        vector<point> v;
+        return v;
+    }
+    point* maxx = &arr[0];
+    point* minx = &arr[0];
+    for(auto i = arr.begin(); i != arr.end();i++){
+        if((*i).x > maxx->x){
+            maxx = &(*i);
+        }
+        else if((*i).x == maxx->x){
+            if((*i).y > maxx->y){
+                maxx -> deleted = 1;
+                maxx = &(*i);
+            }
+            else if((*i).y < maxx->y){
+                (*i).deleted = 1;
+            }
+        }
+        else if((*i).x < minx->x){
+            minx = &(*i);
+        }
+        else if((*i).x == minx->x){
+            if((*i).y > minx->y){
+                minx -> deleted = 1;
+                minx = &(*i);
+            }
+            else if((*i).y < minx->y){
+                (*i).deleted = 1;
+            }
+        }
+    }
+
+    vector<point> rArr;
+    for(auto i = arr.begin(); i!= arr.end();i++){
+        if(!(*i).deleted){
+            rArr.push_back(*i);
+        }
+    }
+    return rArr;
+}
+
+vector<point> upperHull(vector<point> arr, int n){
+    if(arr.size() <= 0){
+        vector<point> v;
+        return v;
+    }
+    if(arr.size() == 1){
+        vector<point> v;
+        v.push_back(arr[0]);
+        return v;
+    }
+    if(arr.size() == 2){
+        vector<point> v;
+        v.push_back(arr[0]);
+        v.push_back(arr[1]);
+        return v;
+    }
+    vector<point> cleanedVec = removeMaxMinXcoords(arr);
+    point * cleanedArr = new point[cleanedVec.size()];
+    for(int i = 0; i< cleanedVec.size() ;i++){
+        cleanedArr[i] = cleanedVec[i];
+    }
+    int median = 0;
+    if(cleanedVec.size() %2 ==0){
+        int val1 = kthSmallest(cleanedArr , 0 , cleanedVec.size() - 1 , cleanedVec.size()/2);
+        int val2 = kthSmallest(cleanedArr, 0 , cleanedVec.size() - 1 , ((cleanedVec.size()/2) + 1));
+        median = (val1 + val2) /2;
+    }
+    else{
+        median = kthSmallest(cleanedArr , 0 , cleanedVec.size() - 1 , ((cleanedVec.size()/2) + 1));
+    }
+    line bridge = findBridge(cleanedVec , cleanedVec.size() , median);
+    vector<point> S1;
+    vector<point> S2;
+    for(auto i = cleanedVec.begin(); i != cleanedVec.end(); i++){
+        if((*i).x <= min(bridge.p.x , bridge.q.x)){
+            S1.push_back(*i);
+        }
+        if((*i).x >= max(bridge.p.x , bridge.q.x)){
+            S2.push_back(*i);
+        }
+    }
+
+    vector<point> leftHull = upperHull(S1, S1.size());
+    vector<point> rightHull = upperHull(S2,S2.size());
+
+    leftHull.push_back(bridge.p);
+    leftHull.push_back(bridge.q);
+    leftHull.insert(leftHull.end(), rightHull.begin(), rightHull.end());
+
+    return leftHull;
+}
+
+double kthSmallest(line arr[], int l, int r, int k)
+{
+    if (k > 0 && k <= r - l + 1)
+    {
+        int pos = randomPartition(arr, l, r);
+        if (pos-l == k-1)
+            return arr[pos].slope;
+        if (pos-l > k-1)
+            return kthSmallest(arr, l, pos-1, k);
+        return kthSmallest(arr, pos+1, r, k-pos+l-1);
+    }
+    return INT_MAX;
+}
+
+void swap(line *a, line *b)
+{
+    line temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int partition(line arr[], int l, int r)
+{
+    double x = arr[r].slope;
+    int i = l;
+    for (int j = l; j <= r - 1; j++)
+    {
+        if (arr[j].slope <= x)
+        {
+            swap(&arr[i], &arr[j]);
+            i++;
+        }
+    }
+    swap(&arr[i], &arr[r]);
+    return i;
+}
+
+int randomPartition(line arr[], int l, int r)
+{
+    int n = r-l+1;
+    int pivot = rand() % n;
+    swap(&arr[l + pivot], &arr[r]);
+    return partition(arr, l, r);
+}
+
+int kthSmallest(point arr[], int l, int r, int k)
+{
+    if (k > 0 && k <= r - l + 1)
+    {
+        int pos = randomPartition(arr, l, r);
+        if (pos-l == k-1)
+            return arr[pos].x;
+        if (pos-l > k-1)
+            return kthSmallest(arr, l, pos-1, k);
+        return kthSmallest(arr, pos+1, r, k-pos+l-1);
+    }
+
+    return INT_MAX;
+}
+
+void swap(point *a, point *b)
+{
+    point temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int partition(point arr[], int l, int r)
+{
+    double x = arr[r].x;
+    int i = l;
+    for (int j = l; j <= r - 1; j++)
+    {
+        if (arr[j].x <= x)
+        {
+            swap(&arr[i], &arr[j]);
+            i++;
+        }
+    }
+    swap(&arr[i], &arr[r]);
+    return i;
+}
+
+int randomPartition(point arr[], int l, int r)
+{
+    int n = r-l+1;
+    int pivot = rand() % n;
+    swap(&arr[l + pivot], &arr[r]);
+    return partition(arr, l, r);
+}
+
+int main() {
+
+    int n;
+    cout<<"Enter number of points"<<endl;
+    cin >> n;
+    vector<point> pointRandom(n);
+    for(int i=0;i<n;i++){
+        pointRandom[i].x = rand()%100;
+        pointRandom[i].y = rand()%100;
+    }
+    cout<<"Input Points are :"<<endl;
+    for(int i=0;i<pointRandom.size();i++){
+        cout<<"("<<pointRandom[i].x<<","<<pointRandom[i].y<<")"<<endl;
+    }
+    vector<point> uh = upperHull(pointRandom ,n);
+    vector<point>::iterator ip;
+
+    ip = std::unique(uh.begin(), uh.begin() + uh.size());
+
+    uh.resize(std::distance(uh.begin(), ip));
+
+    for(auto i = uh.begin(); i != uh.end(); i++){
+        printPoint((*i));
+    }
+
+    return 0;
+}              // Reference :https://iq.opengenus.org/kirkpatrick-seidel-algorithm-convex-hull/
